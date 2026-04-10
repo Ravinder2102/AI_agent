@@ -26,17 +26,16 @@ def main():
 
 def generate_content(client, messages, verbose):
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.1-flash-lite-preview",
         contents=messages,
         )
     if not response.usage_metadata:
         raise RuntimeError("API request failed")
     if verbose: 
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-        print(f"Response tokens: {response.usage_metadata.candidates_token_count} ")
+        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
     
-    print(f"Response:{response.text}")
+    print(f"Response: {response.text}")
     
-
 if __name__ == "__main__":
     main()
