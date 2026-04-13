@@ -1,5 +1,3 @@
-import copy
-
 from google.genai import types
 from functions.get_files_info import schema_get_files_info, get_files_info
 from functions.get_file_content import schema_get_file_content, get_file_content
