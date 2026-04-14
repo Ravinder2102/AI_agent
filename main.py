@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from call_function import available_functions, call_function
+from config import MAX_ITERS
 
 def main():
     parser = argparse.ArgumentParser(description="Chatbot")
@@ -24,7 +25,15 @@ def main():
     if args.verbose:
         print(f"User prompt: {args.user_prompt}\n")
     
-    generate_content(client, messages, args.verbose)
+    for i in range(MAX_ITERS):
+        result = generate_content(client, messages, args.verbose)
+        if result:
+            print(result)
+            break
+    else:
+        print("Error: Maximum limit of model reached")
+        exit(1)
+        
 
 def generate_content(client, messages, verbose):
     response = client.models.generate_content(
@@ -37,12 +46,13 @@ def generate_content(client, messages, verbose):
     if verbose: 
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+
+    for candidate in response.candidates:
+        messages.append(candidate.content)
     if not response.function_calls:
-        print(f"Response: {response.text}")
-        return
+        return f"Response: {response.text}"
     function_call_result_list = []
     for function_call in response.function_calls:
-        #print(f"Calling function: {function_call.name}({function_call.args})")
         function_call_result = call_function(function_call,verbose)
         if not function_call_result.parts:
             raise Exception
@@ -53,5 +63,6 @@ def generate_content(client, messages, verbose):
         function_call_result_list.append(function_call_result.parts[0]) 
         if verbose:
             print(f"-> {function_call_result.parts[0].function_response.response}")
+    messages.append(types.Content(role="user", parts=function_call_result_list))
 if __name__ == "__main__":
     main()
